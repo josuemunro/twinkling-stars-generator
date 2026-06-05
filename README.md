@@ -2,9 +2,9 @@
 
 A zero-dependency, single-file generator for **realistic twinkling star-field backgrounds**. Tune the look in a live editor, then export a self-contained HTML snippet you can drop into any site.
 
-🔗 **Live demo:** _(Netlify URL — added after first deploy)_
+🔗 **Live demo:** **https://charming-griffin-f8a026.netlify.app/**
 
-![Twinkling stars](https://img.shields.io/badge/dependencies-none-brightgreen) ![Vanilla JS](https://img.shields.io/badge/built%20with-vanilla%20JS-yellow)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/ccb57319-8234-415b-9d23-591dde91295d/deploy-status)](https://app.netlify.com/projects/charming-griffin-f8a026/deploys) ![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen) ![Vanilla JS](https://img.shields.io/badge/built%20with-vanilla%20JS-yellow)
 
 ## What it does
 

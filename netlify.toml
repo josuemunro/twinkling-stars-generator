@@ -1,7 +1,8 @@
-# Static single-page site — no build step required.
+# Static single-page site. The only "build" step stamps the commit SHA into
+# the app's version badge (see scripts/version.js), then publishes the folder.
 [build]
   publish = "."
-  command = ""
+  command = "node scripts/version.js"
 
 # Long-cache the app shell is unnecessary for a single file; keep defaults.
 # Security-friendly headers for a static page.

@@ -228,6 +228,23 @@
     white-space: nowrap;
   }
 
+  #ls-version {
+    position: fixed;
+    right: 12px;
+    bottom: 10px;
+    font-size: 11px;
+    color: var(--text-dim);
+    background: rgba(12,13,20,0.5);
+    border: 1px solid rgba(255,255,255,0.07);
+    padding: 3px 8px;
+    border-radius: 8px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    z-index: 20;
+    pointer-events: none;
+    user-select: none;
+  }
+
   .toast {
     position: absolute;
     top: 16px; left: 50%;
@@ -338,7 +355,7 @@
       <h2>Scroll &amp; Parallax</h2>
       <div class="ctrl">
         <label>Field height (screens) <span class="val" id="heightV"></span></label>
-        <input type="range" id="height" min="1" max="4" step="0.25" value="1" />
+        <input type="range" id="height" min="1" max="4" step="0.25" value="2" />
       </div>
       <div class="ctrl">
         <label>Parallax depth <span class="val" id="parallaxV"></span></label>
@@ -381,7 +398,14 @@
     </div>
   </main>
   <div class="toast" id="toast"></div>
+  <div id="ls-version" title="Version">v1.1.0</div>
 </div>
+
+<!-- Version stamp: __BUILD_REF__ is replaced with the commit SHA at deploy time (scripts/version.js) -->
+<script>
+  window.__APP_VERSION__ = "1.1.0";
+  window.__BUILD_REF__ = "dev";
+</script>
 
 <script>
 /* =================================================================
@@ -819,6 +843,17 @@ $('export').addEventListener('click', () => {
 
 // Initial paint.
 render();
+
+// Version badge (bottom-right). __BUILD_REF__ is "dev" locally and the
+// short commit SHA on deployed builds (stamped by scripts/version.js).
+(function () {
+  var el = document.getElementById('ls-version');
+  if (!el) return;
+  var ver = 'v' + (window.__APP_VERSION__ || '0.0.0');
+  var ref = window.__BUILD_REF__ || 'dev';
+  el.textContent = ver + ' · ' + ref;
+  el.title = 'Version ' + ver + ' · build ' + ref;
+})();
 </script>
 </body>
 </html>
