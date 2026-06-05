@@ -1,0 +1,15 @@
+# Local tooling / editor
+.claude/
+.vscode/
+.idea/
+
+# Netlify
+.netlify/
+
+# Node (only used for the optional local http-server)
+node_modules/
+npm-debug.log*
+
+# OS cruft
+.DS_Store
+Thumbs.db

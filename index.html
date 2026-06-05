@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Twinkling Stars Generator — Legend Story</title>
+<style>
+  :root {
+    --panel-bg: #14151c;
+    --panel-bg-2: #1c1e28;
+    --panel-line: #2a2d3a;
+    --text: #e7e9f0;
+    --text-dim: #9aa0b4;
+    --accent: #7c93ff;
+    --accent-2: #ffd479;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    height: 100%;
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text);
+    background: #0a0a0f;
+    overflow: hidden;
+  }
+
+  #app {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    height: 100vh;
+  }
+
+  /* ---------- Control panel ---------- */
+  #panel {
+    background: linear-gradient(180deg, var(--panel-bg), var(--panel-bg-2));
+    border-right: 1px solid var(--panel-line);
+    overflow-y: auto;
+    padding: 18px 18px 60px;
+    user-select: none;
+  }
+  #panel::-webkit-scrollbar { width: 10px; }
+  #panel::-webkit-scrollbar-thumb { background: #2c2f3d; border-radius: 8px; }
+
+  .brand {
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin: 0 0 2px;
+  }
+  h1 {
+    font-size: 19px;
+    margin: 0 0 16px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+
+  .group {
+    border: 1px solid var(--panel-line);
+    border-radius: 12px;
+    padding: 12px 12px 14px;
+    margin-bottom: 12px;
+    background: rgba(255,255,255,0.012);
+  }
+  .group > h2 {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin: 0 0 12px;
+    font-weight: 600;
+  }
+
+  .ctrl { margin-bottom: 13px; }
+  .ctrl:last-child { margin-bottom: 2px; }
+  .ctrl label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 12.5px;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+  .ctrl label .val {
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    font-size: 11.5px;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    border-radius: 4px;
+    background: #303445;
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid #11121a;
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--accent); cursor: pointer; border: 2px solid #11121a;
+  }
+
+  .colors {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .swatch label {
+    font-size: 12px;
+    color: var(--text-dim);
+    display: block;
+    margin-bottom: 6px;
+  }
+  input[type="color"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 34px;
+    border: 1px solid var(--panel-line);
+    border-radius: 8px;
+    background: none;
+    cursor: pointer;
+    padding: 3px;
+  }
+  input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+  input[type="color"]::-webkit-color-swatch { border: none; border-radius: 5px; }
+
+  .row { display: flex; gap: 8px; }
+  .toggle {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12.5px; cursor: pointer; color: var(--text);
+  }
+  .toggle input { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
+
+  .buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+  button {
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 550;
+    color: var(--text);
+    background: #262a38;
+    border: 1px solid var(--panel-line);
+    border-radius: 9px;
+    padding: 9px 10px;
+    cursor: pointer;
+    transition: background .12s, transform .05s;
+  }
+  button:hover { background: #2f3445; }
+  button:active { transform: translateY(1px); }
+  button.primary { background: var(--accent); color: #0c0e18; border-color: var(--accent); }
+  button.primary:hover { filter: brightness(1.08); }
+  button.wide { grid-column: 1 / -1; }
+
+  .seedline {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; color: var(--text-dim); margin-bottom: 10px;
+  }
+  .seedline b { color: var(--text); font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  .hint { font-size: 11px; color: var(--text-dim); line-height: 1.45; margin: 8px 0 0; }
+
+  /* ---------- Preview ---------- */
+  #stage { position: relative; overflow: hidden; }
+  #scroller {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  #scroller::-webkit-scrollbar { width: 10px; }
+  #scroller::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); border-radius: 8px; }
+
+  /* These three classes are shared verbatim with the exported snippet. */
+  .ls-starfield { position: relative; width: 100%; height: var(--ls-field, 100%); }
+  .ls-sky { position: sticky; top: 0; height: var(--ls-vp, 100%); overflow: hidden; }
+  .ls-layer {
+    position: absolute; top: 0; left: 0; width: 100%;
+    height: var(--ls-field, 100%);
+    will-change: transform;
+  }
+  .star {
+    position: absolute;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    will-change: opacity, transform;
+  }
+  @keyframes ls-twinkle {
+    from { opacity: var(--o0); transform: translate(-50%, -50%) scale(var(--sc0)); }
+    to   { opacity: var(--o1); transform: translate(-50%, -50%) scale(var(--sc1)); }
+  }
+
+  #stagebar {
+    position: absolute;
+    left: 50%;
+    bottom: 16px;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    padding: 7px 8px;
+    background: rgba(12,13,20,0.55);
+    border: 1px solid rgba(255,255,255,0.08);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    z-index: 5;
+  }
+  #stagebar button { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.1); }
+  #stagebar button:hover { background: rgba(255,255,255,0.13); }
+  #count2 {
+    align-self: center;
+    font-size: 11.5px;
+    color: var(--text-dim);
+    padding: 0 8px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .toast {
+    position: absolute;
+    top: 16px; left: 50%;
+    transform: translateX(-50%) translateY(-12px);
+    background: rgba(20,22,32,0.92);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: var(--text);
+    font-size: 12.5px;
+    padding: 9px 14px;
+    border-radius: 10px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s, transform .2s;
+    z-index: 10;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- ============ CONTROL PANEL ============ -->
+  <aside id="panel">
+    <p class="brand">Legend Story</p>
+    <h1>Twinkling Stars Generator</h1>
+
+    <div class="seedline">
+      <span>Seed&nbsp; <b id="seedval">—</b></span>
+      <button id="newseed" style="padding:5px 10px;font-size:11.5px;">New seed ⟳</button>
+    </div>
+
+    <!-- Field / placement -->
+    <div class="group">
+      <h2>Star Field</h2>
+      <div class="ctrl">
+        <label>Star count <span class="val" id="countV"></span></label>
+        <input type="range" id="count" min="50" max="3000" step="10" value="380" />
+      </div>
+      <div class="ctrl">
+        <label>Clumping <span class="val" id="clumpV"></span></label>
+        <input type="range" id="clump" min="0" max="1" step="0.01" value="0.7" />
+      </div>
+      <div class="ctrl">
+        <label>Clump size <span class="val" id="scaleV"></span></label>
+        <input type="range" id="scale" min="1" max="12" step="0.1" value="3.5" />
+      </div>
+      <div class="ctrl">
+        <label>Noise detail <span class="val" id="octV"></span></label>
+        <input type="range" id="oct" min="1" max="5" step="1" value="2" />
+      </div>
+      <div class="ctrl">
+        <label>Galactic band <span class="val" id="bandV"></span></label>
+        <input type="range" id="band" min="0" max="1" step="0.01" value="0" />
+      </div>
+      <div class="ctrl">
+        <label>Band angle <span class="val" id="angleV"></span></label>
+        <input type="range" id="angle" min="-90" max="90" step="1" value="-20" />
+      </div>
+    </div>
+
+    <!-- Star look -->
+    <div class="group">
+      <h2>Star Look</h2>
+      <div class="ctrl colors">
+        <div class="swatch"><label>Star colour</label><input type="color" id="starCol" value="#e3d7fe" /></div>
+        <div class="swatch"><label>Tint variation</label><input type="color" id="tintCol" value="#19012a" /></div>
+      </div>
+      <div class="ctrl">
+        <label>Colour variation <span class="val" id="colVarV"></span></label>
+        <input type="range" id="colVar" min="0" max="1" step="0.01" value="0.35" />
+      </div>
+      <div class="ctrl">
+        <label>Luminance <span class="val" id="lumV"></span></label>
+        <input type="range" id="lum" min="0.2" max="1" step="0.01" value="0.67" />
+      </div>
+      <div class="ctrl">
+        <label>Min size (px) <span class="val" id="sMinV"></span></label>
+        <input type="range" id="sMin" min="0.5" max="4" step="0.1" value="0.6" />
+      </div>
+      <div class="ctrl">
+        <label>Max size (px) <span class="val" id="sMaxV"></span></label>
+        <input type="range" id="sMax" min="1" max="9" step="0.1" value="1.2" />
+      </div>
+      <div class="ctrl">
+        <label>Glow <span class="val" id="glowV"></span></label>
+        <input type="range" id="glow" min="0" max="4" step="0.05" value="1.6" />
+      </div>
+    </div>
+
+    <!-- Twinkle -->
+    <div class="group">
+      <h2>Twinkle</h2>
+      <div class="ctrl">
+        <label>Speed <span class="val" id="twSpeedV"></span></label>
+        <input type="range" id="twSpeed" min="0.2" max="4" step="0.05" value="3" />
+      </div>
+      <div class="ctrl">
+        <label>Amount <span class="val" id="twAmtV"></span></label>
+        <input type="range" id="twAmt" min="0" max="1" step="0.01" value="0.9" />
+      </div>
+      <div class="ctrl">
+        <label>Twinkling fraction <span class="val" id="twFracV"></span></label>
+        <input type="range" id="twFrac" min="0" max="1" step="0.01" value="0.8" />
+      </div>
+    </div>
+
+    <!-- Scroll & parallax -->
+    <div class="group">
+      <h2>Scroll &amp; Parallax</h2>
+      <div class="ctrl">
+        <label>Field height (screens) <span class="val" id="heightV"></span></label>
+        <input type="range" id="height" min="1" max="4" step="0.25" value="1" />
+      </div>
+      <div class="ctrl">
+        <label>Parallax depth <span class="val" id="parallaxV"></span></label>
+        <input type="range" id="parallax" min="0" max="1" step="0.05" value="0.5" />
+      </div>
+      <p class="hint">Above 1 screen the preview scrolls. Bigger/brighter stars sit "nearer" and drift faster for depth. Count is per screen, so density stays constant as height grows.</p>
+    </div>
+
+    <!-- Background -->
+    <div class="group">
+      <h2>Background</h2>
+      <div class="ctrl colors">
+        <div class="swatch"><label>Top</label><input type="color" id="bgTop" value="#040106" /></div>
+        <div class="swatch"><label>Bottom</label><input type="color" id="bgBot" value="#02030a" /></div>
+      </div>
+      <div class="ctrl">
+        <label class="toggle"><input type="checkbox" id="bgGrad" /> Vertical gradient</label>
+      </div>
+    </div>
+
+    <div class="buttons">
+      <button id="randomize" class="wide">🎲 Randomise design</button>
+      <button id="export" class="primary">Export HTML</button>
+      <button id="copyCfg">Copy settings</button>
+    </div>
+    <p class="hint">Everything is deterministic from the seed — same seed + settings always reproduces the exact field. Export gives you a self-contained snippet to drop into any site.</p>
+  </aside>
+
+  <!-- ============ PREVIEW STAGE ============ -->
+  <main id="stage">
+    <div id="scroller">
+      <div class="ls-starfield" id="field">
+        <div class="ls-sky" id="sky"></div>
+      </div>
+    </div>
+    <div id="stagebar">
+      <button id="regen">Regenerate ⟳</button>
+      <span id="count2"></span>
+      <button id="fullscreen">Fullscreen ⤢</button>
+    </div>
+  </main>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* =================================================================
+   CORE — pure, deterministic functions.
+   These are serialized verbatim into the exported snippet, so the
+   exported background is pixel-identical to the live preview.
+   ================================================================= */
+
+// Seedable PRNG (mulberry32). Same seed -> same sequence, everywhere.
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// Integer-coordinate hash -> [0,1). Drives the value-noise lattice.
+function lsHash2(ix, iy, seed) {
+  let h = Math.imul(ix, 374761393) ^ Math.imul(iy, 668265263) ^ Math.imul(seed, 1274126177);
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  h ^= h >>> 16;
+  return (h >>> 0) / 4294967296;
+}
+
+function lsSmooth(t) { return t * t * (3 - 2 * t); }
+
+// 2D value noise via bilinear interpolation of hashed lattice points.
+function lsValueNoise(x, y, seed) {
+  const ix = Math.floor(x), iy = Math.floor(y);
+  const fx = x - ix, fy = y - iy;
+  const v00 = lsHash2(ix, iy, seed),     v10 = lsHash2(ix + 1, iy, seed);
+  const v01 = lsHash2(ix, iy + 1, seed), v11 = lsHash2(ix + 1, iy + 1, seed);
+  const ux = lsSmooth(fx), uy = lsSmooth(fy);
+  const a = v00 + (v10 - v00) * ux;
+  const b = v01 + (v11 - v01) * ux;
+  return a + (b - a) * uy;
+}
+
+// Fractal Brownian Motion — stacked octaves of value noise. This is the
+// low-frequency DENSITY FIELD that decides where stars want to clump.
+function lsFbm(x, y, seed, octaves) {
+  let amp = 0.5, freq = 1, sum = 0, norm = 0;
+  for (let i = 0; i < octaves; i++) {
+    sum += amp * lsValueNoise(x * freq, y * freq, seed + i * 101);
+    norm += amp; amp *= 0.5; freq *= 2;
+  }
+  return sum / norm;
+}
+
+// hex <-> rgb helpers + lerp, for per-star colour-temperature jitter.
+function lsHex2rgb(h) {
+  h = h.replace('#', '');
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+}
+function lsRgb2hex(r, g, b) {
+  const c = n => ('0' + Math.max(0, Math.min(255, Math.round(n))).toString(16)).slice(-2);
+  return '#' + c(r) + c(g) + c(b);
+}
+function lsMix(a, b, t) {
+  const ca = lsHex2rgb(a), cb = lsHex2rgb(b);
+  return lsRgb2hex(ca[0] + (cb[0] - ca[0]) * t, ca[1] + (cb[1] - ca[1]) * t, ca[2] + (cb[2] - ca[2]) * t);
+}
+
+// Per-depth-layer parallax speeds. Index 0 = farthest (slowest),
+// last index = nearest (fastest, ~lockstep with scroll).
+function lsLayerSpeeds(o) {
+  const L = o.layers || 3, arr = [];
+  for (let i = 0; i < L; i++) {
+    const t = L > 1 ? i / (L - 1) : 1;              // 0 far .. 1 near
+    arr.push(+(1 - o.parallax * (0.75 * (1 - t) + 0.1)).toFixed(4));
+  }
+  return arr;
+}
+
+/* ----- The generator: noise density field + rejection sampling ----- */
+function lsGenerateStars(o) {
+  const rand = mulberry32(o.seed >>> 0);
+  const stars = [];
+  const L = o.layers || 3;
+  const h = o.heightVH || 1;
+  const target = Math.round(o.count * h);            // count is "per screen" -> constant density
+  const cs = Math.cos(o.angle * Math.PI / 180), sn = Math.sin(o.angle * Math.PI / 180);
+
+  // Rejection sampling: propose a random point, keep it with a probability
+  // driven by the noise density. Dense noise regions => tight star clumps.
+  let guard = target * 60;                            // safety so sparse fields still terminate
+  while (stars.length < target && guard-- > 0) {
+    const px = rand(), py = rand();
+
+    // Sample the density field. The y axis is scaled by field height so
+    // clumps stay roughly round instead of stretching on tall fields.
+    let nx = px, ny = py;
+    if (o.band > 0) {
+      const rx = (px - 0.5) * cs - (py - 0.5) * sn;
+      const ry = (px - 0.5) * sn + (py - 0.5) * cs;
+      nx = rx + 0.5;
+      ny = (ry * (1 - 0.92 * o.band)) + 0.5;          // compress across the band
+    } else {
+      ny = py * h;                                    // keep clump aspect on tall fields
+    }
+    let d = lsFbm(nx * o.scale, ny * o.scale, o.seed, o.octaves);
+
+    // Sharpen the field into contrast so clumps read as clumps.
+    d = Math.pow(d, 1 + o.clump * 4);
+
+    // Blend between uniform scatter and pure-noise placement.
+    const accept = (1 - o.clump) + o.clump * d;
+    if (rand() > accept) continue;
+
+    // ---- Per-star attributes (independent random draws) ----
+    // Size: biased small via a power curve; a few big anchor stars.
+    const sizeT = Math.pow(rand(), 2.2);
+    const size = o.sMin + (o.sMax - o.sMin) * sizeT;
+
+    // Depth layer: bigger stars bias toward the nearer (faster) layers.
+    const layer = Math.min(L - 1, Math.floor((0.6 * sizeT + 0.4 * rand()) * L));
+
+    // Brightness correlates a little with size + luminance setting.
+    const bright = Math.min(1, o.lum * (0.55 + 0.6 * sizeT + 0.25 * rand()));
+
+    // Colour temperature: nudge toward the tint by a random fraction.
+    const color = lsMix(o.starCol, o.tintCol, rand() * o.colVar);
+
+    // Twinkle timing — each star out of phase for a natural shimmer.
+    const twinkles = rand() < o.twFrac;
+    const dur = (2.2 + rand() * 4.5) / o.twSpeed;     // seconds
+    const delay = rand() * dur;
+
+    stars.push({
+      x: +(px * 100).toFixed(3),
+      y: +(py * 100).toFixed(3),
+      size: +size.toFixed(2),
+      bright: +bright.toFixed(3),
+      color, layer,
+      twinkles,
+      dur: +dur.toFixed(2),
+      delay: +delay.toFixed(2),
+    });
+  }
+  return stars;
+}
+
+// Build the inner HTML for all stars, grouped into parallax depth layers.
+// Shared by preview AND export so the two can never drift apart.
+function lsBuildStarsHTML(stars, o) {
+  const L = o.layers || 3;
+  const speeds = lsLayerSpeeds(o);
+  const buckets = new Array(L).fill('');
+  for (let i = 0; i < stars.length; i++) {
+    const s = stars[i];
+    const glow = (s.size * o.glow).toFixed(2);
+    const glow2 = (s.size * o.glow * 2.1).toFixed(2);
+    const shadow = o.glow > 0
+      ? `,0 0 ${glow}px ${(s.size * 0.6).toFixed(2)}px ${s.color},0 0 ${glow2}px ${s.color}`
+      : '';
+    // twinkle opacity range scales with the "amount" control.
+    const lo = Math.max(0.05, s.bright * (1 - o.twAmt)).toFixed(3);
+    const hi = s.bright.toFixed(3);
+    let style =
+      `left:${s.x}%;top:${s.y}%;width:${s.size}px;height:${s.size}px;` +
+      `background:${s.color};box-shadow:0 0 0 0 ${s.color}${shadow};`;
+    if (s.twinkles) {
+      style +=
+        `--o0:${lo};--o1:${hi};--sc0:${(1 - 0.18 * o.twAmt).toFixed(3)};--sc1:1;` +
+        `animation:ls-twinkle ${s.dur}s ease-in-out ${s.delay}s infinite alternate;`;
+    } else {
+      style += `opacity:${hi};`;
+    }
+    buckets[s.layer] += `<div class="star" style="${style}"></div>`;
+  }
+  let html = '';
+  for (let i = 0; i < L; i++) {
+    html += `<div class="ls-layer" data-speed="${speeds[i]}">${buckets[i]}</div>`;
+  }
+  return html;
+}
+
+// Attach scroll-driven parallax: translate each depth layer by a fraction
+// of the scroll offset. Respects reduced-motion. Used by preview & export.
+function lsParallax(root, scrollEl) {
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce) return function () {};
+  let ticking = false;
+  function apply() {
+    const s = scrollEl === window ? (window.scrollY || window.pageYOffset || 0) : scrollEl.scrollTop;
+    const layers = root.getElementsByClassName('ls-layer');
+    for (let i = 0; i < layers.length; i++) {
+      const sp = parseFloat(layers[i].getAttribute('data-speed')) || 1;
+      layers[i].style.transform = 'translateY(' + (-s * sp).toFixed(2) + 'px)';
+    }
+    ticking = false;
+  }
+  function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(apply); } }
+  (scrollEl === window ? window : scrollEl).addEventListener('scroll', onScroll, { passive: true });
+  apply();
+  return apply;
+}
+
+/* =================================================================
+   APP — wiring the controls to the live preview.
+   ================================================================= */
+const $ = id => document.getElementById(id);
+const sky = $('sky'), field = $('field'), stage = $('stage'), scroller = $('scroller');
+
+// Fields and their value-label formatters.
+const FIELDS = {
+  count:  v => v,
+  clump:  v => Math.round(v * 100) + '%',
+  scale:  v => (+v).toFixed(1),
+  oct:    v => v,
+  band:   v => Math.round(v * 100) + '%',
+  angle:  v => v + '°',
+  colVar: v => Math.round(v * 100) + '%',
+  lum:    v => Math.round(v * 100) + '%',
+  sMin:   v => (+v).toFixed(1),
+  sMax:   v => (+v).toFixed(1),
+  glow:   v => (+v).toFixed(2),
+  twSpeed:v => (+v).toFixed(2) + '×',
+  twAmt:  v => Math.round(v * 100) + '%',
+  twFrac: v => Math.round(v * 100) + '%',
+  height: v => (+v).toFixed(2) + '×',
+  parallax: v => Math.round(v * 100) + '%',
+};
+const LABEL = {
+  count:'countV', clump:'clumpV', scale:'scaleV', oct:'octV', band:'bandV',
+  angle:'angleV', colVar:'colVarV', lum:'lumV', sMin:'sMinV', sMax:'sMaxV',
+  glow:'glowV', twSpeed:'twSpeedV', twAmt:'twAmtV', twFrac:'twFracV',
+  height:'heightV', parallax:'parallaxV',
+};
+
+const LAYERS = 3;
+let seed = 582942580;   // default to the look you dialled in
+
+function readOpts() {
+  return {
+    seed,
+    layers: LAYERS,
+    count: +$('count').value,
+    clump: +$('clump').value,
+    scale: +$('scale').value,
+    octaves: +$('oct').value,
+    band: +$('band').value,
+    angle: +$('angle').value,
+    starCol: $('starCol').value,
+    tintCol: $('tintCol').value,
+    colVar: +$('colVar').value,
+    lum: +$('lum').value,
+    sMin: Math.min(+$('sMin').value, +$('sMax').value),
+    sMax: Math.max(+$('sMin').value, +$('sMax').value),
+    glow: +$('glow').value,
+    twSpeed: +$('twSpeed').value,
+    twAmt: +$('twAmt').value,
+    twFrac: +$('twFrac').value,
+    heightVH: +$('height').value,
+    parallax: +$('parallax').value,
+  };
+}
+
+function bgValue() {
+  return $('bgGrad').checked
+    ? `linear-gradient(180deg, ${$('bgTop').value}, ${$('bgBot').value})`
+    : $('bgTop').value;
+}
+
+// Set the field/viewport CSS vars (preview uses pixels off the stage size).
+function updateDims() {
+  const vp = scroller.clientHeight || stage.clientHeight;
+  const h = +$('height').value;
+  field.style.setProperty('--ls-vp', vp + 'px');
+  field.style.setProperty('--ls-field', (vp * h) + 'px');
+}
+
+let lastCount = 0;
+function render() {
+  const o = readOpts();
+  stage.style.background = bgValue();
+  updateDims();
+  const stars = lsGenerateStars(o);
+  lastCount = stars.length;
+  sky.innerHTML = lsBuildStarsHTML(stars, o);
+  $('count2').textContent = stars.length + ' stars · ' + o.heightVH.toFixed(2) + '× tall';
+  $('seedval').textContent = seed;
+  for (const id in FIELDS) $(LABEL[id]).textContent = FIELDS[id]($(id).value);
+  updateParallax();   // place layers at the current scroll position
+}
+
+// Debounce heavy re-renders while dragging sliders.
+let raf = 0;
+function scheduleRender() {
+  cancelAnimationFrame(raf);
+  raf = requestAnimationFrame(render);
+}
+
+// Preview parallax: one persistent scroll listener that reads live layers.
+function updateParallax() {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const s = scroller.scrollTop;
+  const layers = sky.getElementsByClassName('ls-layer');
+  for (let i = 0; i < layers.length; i++) {
+    const sp = parseFloat(layers[i].getAttribute('data-speed')) || 1;
+    layers[i].style.transform = 'translateY(' + (-s * sp).toFixed(2) + 'px)';
+  }
+}
+scroller.addEventListener('scroll', () => requestAnimationFrame(updateParallax), { passive: true });
+window.addEventListener('resize', () => { updateDims(); updateParallax(); });
+
+// Wire every input.
+document.querySelectorAll('#panel input').forEach(el => el.addEventListener('input', scheduleRender));
+
+$('newseed').addEventListener('click', () => { seed = (Math.floor(Math.random() * 1e9)) >>> 0; render(); });
+$('regen').addEventListener('click', () => { seed = (Math.floor(Math.random() * 1e9)) >>> 0; render(); });
+
+// ---- Randomise design: pick pleasing-but-varied settings ----
+function rnd(min, max) { return min + Math.random() * (max - min); }
+$('randomize').addEventListener('click', () => {
+  const palettes = [
+    ['#ffffff', '#9bb8ff'], ['#fff4e0', '#ffba6b'], ['#eaffff', '#7fe0ff'],
+    ['#ffffff', '#ff9bd0'], ['#e3d7fe', '#19012a'], ['#ffffff', '#aef5c8'],
+  ];
+  const bgs = [
+    ['#070b1c', '#02030a'], ['#0b0716', '#040207'], ['#001018', '#000406'],
+    ['#0a0612', '#05030a'], ['#040106', '#02030a'],
+  ];
+  const p = palettes[Math.floor(Math.random() * palettes.length)];
+  const bg = bgs[Math.floor(Math.random() * bgs.length)];
+  $('starCol').value = p[0]; $('tintCol').value = p[1];
+  $('bgTop').value = bg[0]; $('bgBot').value = bg[1];
+  $('count').value = Math.round(rnd(300, 1100));
+  $('clump').value = rnd(0.4, 0.95).toFixed(2);
+  $('scale').value = rnd(2, 7).toFixed(1);
+  $('band').value = (Math.random() < 0.5 ? 0 : rnd(0.3, 0.85)).toFixed(2);
+  $('angle').value = Math.round(rnd(-45, 45));
+  $('colVar').value = rnd(0.15, 0.6).toFixed(2);
+  $('lum').value = rnd(0.55, 1).toFixed(2);
+  $('glow').value = rnd(0.8, 2.6).toFixed(2);
+  $('twSpeed').value = rnd(0.6, 3).toFixed(2);
+  $('twAmt').value = rnd(0.4, 0.9).toFixed(2);
+  $('twFrac').value = rnd(0.5, 0.95).toFixed(2);
+  seed = (Math.floor(Math.random() * 1e9)) >>> 0;
+  render();
+});
+
+// ---- Toast helper ----
+let toastT;
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => t.classList.remove('show'), 1900);
+}
+
+// ---- Fullscreen preview ----
+$('fullscreen').addEventListener('click', () => {
+  if (!document.fullscreenElement) stage.requestFullscreen?.();
+  else document.exitFullscreen?.();
+});
+
+// ---- Copy settings as JSON ----
+$('copyCfg').addEventListener('click', () => {
+  const o = readOpts();
+  o.bgTop = $('bgTop').value; o.bgBot = $('bgBot').value; o.bgGrad = $('bgGrad').checked;
+  navigator.clipboard.writeText(JSON.stringify(o, null, 2))
+    .then(() => toast('Settings copied to clipboard'))
+    .catch(() => toast('Copy failed'));
+});
+
+// ---- Export a self-contained snippet ----
+function buildExport() {
+  const o = readOpts();
+  const bg = bgValue();
+
+  // Serialize the exact CORE functions used by the preview.
+  const core = [mulberry32, lsHash2, lsSmooth, lsValueNoise, lsFbm,
+                lsHex2rgb, lsRgb2hex, lsMix, lsLayerSpeeds, lsGenerateStars,
+                lsBuildStarsHTML, lsParallax]
+                .map(f => f.toString()).join('\n');
+
+  return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Starfield</title>
+<style>
+  html,body{margin:0}
+  body{background:${bg}}
+  /* The starfield is a HERO SECTION ${o.heightVH}x the viewport tall.
+     Overlay your title/content inside .ls-sky (it stays pinned while you
+     scroll through the section). For a full-page fixed background instead,
+     give .ls-starfield { position:fixed; inset:0; height:100vh; z-index:-1 }
+     and remove the --ls-field height. */
+  .ls-starfield{position:relative;width:100%;height:var(--ls-field);overflow:hidden;
+    --ls-field:${o.heightVH * 100}vh;--ls-vp:100vh}
+  .ls-sky{position:sticky;top:0;height:var(--ls-vp);overflow:hidden}
+  .ls-layer{position:absolute;top:0;left:0;width:100%;height:var(--ls-field);will-change:transform}
+  .ls-starfield .star{position:absolute;border-radius:50%;
+    transform:translate(-50%,-50%);will-change:opacity,transform}
+  @keyframes ls-twinkle{
+    from{opacity:var(--o0);transform:translate(-50%,-50%) scale(var(--sc0))}
+    to{opacity:var(--o1);transform:translate(-50%,-50%) scale(var(--sc1))}}
+  @media (prefers-reduced-motion: reduce){
+    .ls-starfield .star{animation:none!important}}
+</style></head>
+<body>
+<div class="ls-starfield" id="ls-starfield">
+  <div class="ls-sky" id="ls-sky"></div>
+</div>
+<script>
+${core}
+var LS_OPTS = ${JSON.stringify(o)};
+(function(){
+  var root = document.getElementById('ls-starfield');
+  var sky = document.getElementById('ls-sky');
+  var stars = lsGenerateStars(LS_OPTS);
+  sky.innerHTML = lsBuildStarsHTML(stars, LS_OPTS);
+  lsParallax(root, window);
+})();
+<\/script>
+</body></html>`;
+}
+
+$('export').addEventListener('click', () => {
+  const html = buildExport();
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'starfield-' + seed + '.html';
+  a.click();
+  URL.revokeObjectURL(url);
+  navigator.clipboard.writeText(html).catch(() => {});
+  toast('Exported starfield-' + seed + '.html (also copied)');
+});
+
+// Initial paint.
+render();
+</script>
+</body>
+</html>

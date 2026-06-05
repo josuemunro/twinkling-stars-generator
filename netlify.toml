@@ -1,0 +1,12 @@
+# Static single-page site — no build step required.
+[build]
+  publish = "."
+  command = ""
+
+# Long-cache the app shell is unnecessary for a single file; keep defaults.
+# Security-friendly headers for a static page.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
